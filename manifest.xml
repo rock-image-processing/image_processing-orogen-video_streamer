@@ -1,0 +1,7 @@
+<package>
+  <description brief="base::Frame to MPEG4-Stream encoder/decoder">
+  This package provides two Task, one for converting base::Frames to mpeg4 streams and one for decoding mpeg4 streams to base frames
+  </description>
+  <author>Janosch Machowinski/Janosch.Machowinski@dfki.de</author>
+  <depend package="base/types" />
+</package>

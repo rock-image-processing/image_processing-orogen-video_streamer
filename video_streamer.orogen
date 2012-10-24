@@ -1,0 +1,30 @@
+name "video_streamer"
+import_types_from "base"
+import_types_from "video_streamer_types.hpp"
+using_library 'libavcodec'
+using_library 'libswscale'
+
+task_context "VideoEncoder" do
+    property("bitrate", "int", 1000000)
+    property("framerate", "int", 25)
+    input_port "raw_pictures", ro_ptr('base::samples::frame::Frame')
+    output_port "test_pictures", 'base::samples::frame::Frame'
+    output_port "mpeg_stream", "video_streamer/StreamData"
+    port_driven "raw_pictures"
+end
+
+task_context "VideoDecoder" do
+    input_port "mpeg_stream", "video_streamer/StreamData"
+    output_port "raw_pictures", ro_ptr('base::samples::frame::Frame')
+    port_driven "mpeg_stream"
+end
+
+
+deployment "streamerTest" do
+    task('encoder', "video_streamer::VideoEncoder").
+        triggered
+    task('decoder', "video_streamer::VideoDecoder").
+        triggered
+
+    add_default_logger
+end
