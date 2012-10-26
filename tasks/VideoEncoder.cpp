@@ -69,6 +69,7 @@ bool VideoEncoder::configureHook()
     initialized = false;
     last_height = 0;
     last_width = 0;
+    frameCounter = 0;
     sws_context = NULL;
 
     return true;
@@ -79,6 +80,9 @@ void VideoEncoder::updateHook()
     RTT::extras::ReadOnlyPointer<base::samples::frame::Frame> picture;
     while(_raw_pictures.read(picture) == RTT::NewData)
     {
+	//got new frame, increase framecounter
+	frameCounter++;
+	
 	const uint16_t height = picture->getHeight();
 	const uint16_t width = picture->getWidth();
 
@@ -123,6 +127,10 @@ void VideoEncoder::updateHook()
 	//switch image pointer back
 	rgb_picture->data[0] = tmp;
 
+	//set correct frame number
+	//not this is critical for the encoding.
+	yuv_picture->pts = frameCounter;
+	
 	//encode yuv image to video stream
 	int out_size;
         out_size = avcodec_encode_video(c, outbuffer.data.data(), outbuffer_size, yuv_picture);

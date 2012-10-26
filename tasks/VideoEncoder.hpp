@@ -39,6 +39,7 @@ namespace video_streamer {
 	int outbuffer_size;
 	uint16_t last_height, last_width;
 	bool initialized;
+	int frameCounter;
 
     public:
         /** TaskContext constructor for VideoEncoder
