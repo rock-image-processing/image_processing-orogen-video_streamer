@@ -80,6 +80,13 @@ void VideoEncoder::updateHook()
     RTT::extras::ReadOnlyPointer<base::samples::frame::Frame> picture;
     while(_raw_pictures.read(picture) == RTT::NewData)
     {
+	if(picture->getFrameMode() != base::samples::frame::MODE_RGB)
+	{
+	    std::cout << "Error, at the moment we only support RGB images as input" << std::endl;
+	    exception();
+	    return;
+	}
+	
 	//got new frame, increase framecounter
 	frameCounter++;
 	
