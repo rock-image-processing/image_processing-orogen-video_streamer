@@ -115,17 +115,15 @@ void VideoEncoder::updateHook()
 	    initialized = true;
 	}
 
-	//switch image pointer, to avoid copy
-	uint8_t *tmp = rgb_picture->data[0];
-	rgb_picture->data[0] = const_cast<uint8_t *>(picture->getImageConstPtr());
-	
+	//always copy the image.
+	//the memory needs to be aligned, 
+	//because sws_scale uses MMX or SSE
+	memcpy(rgb_picture->data[0], picture->getImageConstPtr(), picture->getNumberOfBytes() );
+
 	//convert picture from RGB24 to YUV420P
 	//Note the image is copied by sws_scale
 	sws_context = sws_getCachedContext(sws_context, width, height, PIX_FMT_RGB24, width, height, PIX_FMT_YUV420P, SWS_BICUBIC, 0, 0, 0);
 	sws_scale(sws_context, rgb_picture->data, rgb_picture->linesize, 0,  height, yuv_picture->data, yuv_picture->linesize);
-
-	//switch image pointer back
-	rgb_picture->data[0] = tmp;
 
 	//set correct frame number
 	//not this is critical for the encoding.
