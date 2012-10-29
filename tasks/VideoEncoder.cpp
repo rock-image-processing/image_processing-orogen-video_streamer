@@ -49,17 +49,25 @@ bool VideoEncoder::configureHook()
     rgb_picture= avcodec_alloc_frame();
     yuv_picture= avcodec_alloc_frame();
 
+
+
     //set codec parameters
     c = avcodec_alloc_context3(codec);
+    
+    if(codec_id == CODEC_ID_H264)
+    {
+        av_opt_set(c->priv_data, "preset", "slow", 0);
+        if(av_opt_set(c->priv_data, "preset", "ultrafast", 1))
+	    std::cout << "Error Setting opt ultrafast " << std::endl;
+    }
+    
     c->bit_rate = _bitrate.get();
     /* frames per second */
     c->time_base= (AVRational){1, _framerate.get()};
-    c->gop_size = 1;
-    c->max_b_frames=1;
+    c->gop_size = 0;
+    c->max_b_frames=0;
     c->pix_fmt = PIX_FMT_YUV420P;
-    
-    if(codec_id == CODEC_ID_H264)
-        av_opt_set(c->priv_data, "preset", "slow", 0);
+    c->thread_count = 1;
 
     outbuffer_size = 1024*1024;
     //1 megabyte as output buffer 
