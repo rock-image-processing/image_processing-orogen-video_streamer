@@ -4,6 +4,7 @@
 require 'orocos'
 include Orocos
 require 'readline'
+require 'vizkit'
 
 
 if !ARGV[0]  then 
@@ -21,11 +22,15 @@ Orocos.run('video_streamer::VideoDecoder' => 'decoder', :valgrind => false) do
     encoder = TaskContext.get('encoder')
     decoder = TaskContext.get('decoder')
 
-    encoder.mpeg_stream.connect_to(decoder.mpeg_stream, :type => :buffer, :size => 1000 )
+    encoder.mpeg_stream.connect_to(decoder.mpeg_stream, :type => :data )
+
+    Vizkit.display(decoder.raw_pictures)
 
     decoder.configure()
     decoder.start()
     
+    Vizkit.exec()
+
     Readline.readline()
     
     STDERR.puts "shutting down"
