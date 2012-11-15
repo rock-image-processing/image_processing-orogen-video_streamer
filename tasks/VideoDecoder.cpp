@@ -120,7 +120,7 @@ void VideoDecoder::updateHook()
     while(_mpeg_stream.read(input) == RTT::NewData)
     {
 
-	std::cout << "Decoder: Got Data :" << input.data.size() << endl;
+	std::cout << "Decoder: Got Data :" << input.data.size() << std::endl;
         /* NOTE1: some codecs are stream based (mpegvideo, mpegaudio)
            and this is the only method to use them because you cannot
            know the compressed data size before analysing it.
