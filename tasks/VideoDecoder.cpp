@@ -4,6 +4,7 @@
 extern "C"
 {
 #include "libavutil/imgutils.h"
+#include "libavutil/mem.h"
 #include "libavutil/opt.h"
 #include "libavcodec/avcodec.h"
 #include "libavutil/mathematics.h"
