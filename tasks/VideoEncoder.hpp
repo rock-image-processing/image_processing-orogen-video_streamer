@@ -41,6 +41,7 @@ namespace video_streamer {
 	bool initialized;
 	int frameCounter;
 
+        void encodeAndSendFrame(AVFrame* frame);
     public:
         /** TaskContext constructor for VideoEncoder
          * \param name Name of the task. This name needs to be unique to make it identifiable via nameservices.

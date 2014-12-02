@@ -10,6 +10,7 @@ extern "C"
 #include "libavutil/mathematics.h"
 #include "libavutil/samplefmt.h"
 #include "libswscale/swscale.h"
+#include "libavcodec/version.h"
 }
 using namespace video_streamer;
 
@@ -35,9 +36,12 @@ bool VideoEncoder::configureHook()
 {
     if (! VideoEncoderBase::configureHook())
         return false;
-    
+
+#if LIBAVCODEC_VERSION_MAJOR < 56    
     CodecID codec_id = CODEC_ID_H264;
-    
+#else
+    AVCodecID codec_id = AV_CODEC_ID_H264;
+#endif
     /* register all the codecs */
     avcodec_register_all();
     codec = avcodec_find_encoder(codec_id);
@@ -55,7 +59,11 @@ bool VideoEncoder::configureHook()
     //set codec parameters
     c = avcodec_alloc_context3(codec);
     
+#if LIBAVCODEC_VERSION_MAJOR < 56    
     if(codec_id == CODEC_ID_H264)
+#else
+    if(codec_id == AV_CODEC_ID_H264)
+#endif
     {
         av_opt_set(c->priv_data, "preset", "slow", 0);
         if(av_opt_set(c->priv_data, "preset", "ultrafast", 1))
@@ -146,20 +154,51 @@ void VideoEncoder::updateHook()
 	yuv_picture->pts = frameCounter;
 	
 	//encode yuv image to video stream
-	int out_size;
-        out_size = avcodec_encode_video(c, outbuffer.data.data(), outbuffer_size, yuv_picture);
-	if(out_size)
-	{
-	    //crop vector for sending
-	    outbuffer.data.resize(out_size);
-	    _mpeg_stream.write(outbuffer);
-	    //resize to original, this should not allocate
-	    //memory, as reserve was called on the vector
-	    outbuffer.data.resize(outbuffer_size);	    
-	}
+        encodeAndSendFrame(yuv_picture);
     }
 
     VideoEncoderBase::updateHook();
+}
+
+void VideoEncoder::encodeAndSendFrame(AVFrame *frame)
+{
+#if LIBAVCODEC_VERSION_MAJOR < 56    
+        int out_size;
+        out_size = avcodec_encode_video(c, outbuffer.data.data(), outbuffer_size, frame);
+        if(out_size)
+        {
+            //crop vector for sending
+            outbuffer.data.resize(out_size);
+            _mpeg_stream.write(outbuffer);
+            //resize to original, this should not allocate
+            //memory, as reserve was called on the vector
+            outbuffer.data.resize(outbuffer_size);          
+        }
+#else
+        AVPacket avpkt;
+        int got_output_pkg = 0;
+        if(!avcodec_encode_video2(c, &avpkt, frame, &got_output_pkg))
+        {
+            if(got_output_pkg)
+            {
+                //crop vector for sending
+                outbuffer.data.resize(avpkt.size);
+                for(size_t i = 0; i < avpkt.size; i++)
+                {
+                    outbuffer.data[i] = avpkt.data[i];
+                }
+                _mpeg_stream.write(outbuffer);
+                //resize to original, this should not allocate
+                //memory, as reserve was called on the vector
+                outbuffer.data.resize(outbuffer_size);
+            }
+            av_free_packet(&avpkt);
+        }
+        else
+        {
+            std::cout << "Error enconding video stream" << std::endl;
+        }
+#endif
 }
 
 void VideoEncoder::stopHook()
@@ -167,18 +206,8 @@ void VideoEncoder::stopHook()
     //FIXME THIS KILLS ENCODING IN CASE OF RESTART
 
     //send out frames that are buffered by the video encoder
-    int out_size = avcodec_encode_video(c, outbuffer.data.data(), outbuffer_size, NULL);
+    encodeAndSendFrame(NULL);
 
-    if(out_size)
-    {
-	//crop vector for sending
-	outbuffer.data.resize(out_size);
-	_mpeg_stream.write(outbuffer);
-	//resize to original, this should not allocate
-	//memory, as reserve was called on the vector
-	outbuffer.data.resize(outbuffer_size);	    
-    }
-    
     VideoEncoderBase::stopHook();
 }
 

@@ -47,8 +47,13 @@ bool VideoDecoder::configureHook()
     
     av_init_packet(&avpkt);
 
+#if LIBAVCODEC_VERSION_MAJOR < 56    
     /* find the mpeg1 video decoder */
-    codec = avcodec_find_decoder(CODEC_ID_H264);
+    codec = avcodec_find_decoder(CODEC_ID_H264);    
+#else
+    /* find the mpeg1 video decoder */
+    codec = avcodec_find_decoder(AV_CODEC_ID_H264);
+#endif
     if (!codec) {
         fprintf(stderr, "codec not found\n");
         exit(1);
