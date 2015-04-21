@@ -3,6 +3,7 @@
   This package provides two Task, one for converting base::Frames to mpeg4 streams and one for decoding mpeg4 streams to base frames
   </description>
   <author>Janosch Machowinski/Janosch.Machowinski@dfki.de</author>
+  <maintainer>Janosch Machowinski/Janosch.Machowinski@dfki.de</maintainer>
   <depend package="base/orogen/types" />
   <depend package="ffmpeg" />
 </package>
